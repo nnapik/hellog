@@ -23,12 +23,10 @@ class MyClient(discord.Client):
             await self.log(lmessage)
 
     async def on_guild_channel_create(self, channel):
-        message = ('Channel ' + str(channel) + ' created')
-        await self.log(message)
+        await self.log('Channel ' + str(channel) + ' created')
 
     async def on_guild_channel_delete(self, channel):
-        message = ('Channel ' + str(channel) + ' deleted')
-        await self.log(message)
+        await self.log('Channel ' + str(channel) + ' deleted')
 
     async def on_guild_channel_update(self, before, after):
         if (before.name != after.name):
@@ -37,19 +35,17 @@ class MyClient(discord.Client):
 #            await self.log('Channel ' + after.name + ' was moved')
 
         if (before.category is None and after.category is not None):
-            await self.log('Channel ' + after.name + ' was moved to ' + after.category)
+            await self.log('Channel ' + after.name + ' was moved to ' + after.category.name)
         elif (before.category is not None and after.category is None):
-            await self.log('Channel ' + after.name + ' was removed from ' + before.category)
+            await self.log('Channel ' + after.name + ' was removed from ' + before.category.name)
         if (before.category != after.category):
-            await self.log('Channel ' + after.name + ' changed category from ' + before.category + ' to ' + after.category)
+            await self.log('Channel ' + after.name + ' changed category from ' + before.category.name + ' to ' + after.category.name)
 
     async def on_member_join(self, member):
-        message = ('Member ' + str(member) + ' joined')
-        await self.log(message)
+        await self.log('Member ' + str(member) + ' joined')
 
     async def on_member_remove(self, member):
-        message = ('Member ' + str(member) + ' was removed or left')
-        await self.log(message)
+        await self.log('Member ' + str(member) + ' was removed or left')
 
     async def on_member_update(self, before, after):
         if (before.display_name != after.display_name):
@@ -66,20 +62,16 @@ class MyClient(discord.Client):
                 await self.log('[' + ', '.join(added) + '] roles were added to ' + after.display_name)
 
     async def on_guild_update(self, before, after):
-        message = ('Server ' + str(before) + ' was changed from ' + str(before) + ' to ' + str(after))
-        await self.log(message)
+        await self.log('Server ' + str(before) + ' was changed from ' + str(before) + ' to ' + str(after))
 
     async def on_guild_role_create(self, role):
-        message = ('Role ' + str(role) + ' was created')
-        await self.log(message)
+        await self.log('Role ' + str(role) + ' was created')
 
     async def on_guild_role_delete(self, role):
-        message = ('Role ' + str(role) + ' was deleted')
-        await self.log(message)
+        await self.log('Role ' + str(role) + ' was deleted')
 
     async def on_guild_role_update(self, before, after):
-        message = ('Role ' + str(before) + ' was updated')
-        await self.log(message)
+        await self.log('Role ' + str(before) + ' was updated')
 
     async def on_voice_state_update(self, member, before, after):
         if before.channel is None:
@@ -116,20 +108,17 @@ class MyClient(discord.Client):
                 await self.log(str(member) + ' came back from AFK')
 
     async def on_member_ban(self, guild, user):
-        message = ('Server ' + str(guild) + 'has banned ' + str(user))
-        await self.log(message)
+        await self.log('Server ' + str(guild) + 'has banned ' + str(user))
 
     async def on_member_unban(self, guild, user):
-        message = ('Server ' + str(guild) + 'has unbanned ' + str(user))
-        await self.log(message)
+        await self.log('Server ' + str(guild) + 'has unbanned ' + str(user))
 
     async def on_group_join(self, channel, user):
-        message = (str(user) + ' joined ' + str(channel))
-        await self.log(message)
+        await self.log(str(user) + ' joined ' + str(channel))
 
     async def on_group_remove(self, channel, user):
-        message = (str(user) + ' left ' + str(channel))
-        await self.log(message)
+        await self.log(str(user) + ' left ' + str(channel))
+
 
 client = MyClient()
 client.run('NTg2MTE3Mjg3MTQwOTE3MjYw.XPjW_Q.83TbJxOH_E9z6CEXmCxu7y8b-xk')
