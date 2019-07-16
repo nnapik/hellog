@@ -1,45 +1,163 @@
+import asyncio
 import discord
+import logging
+import os
+import re
+import youtube_dl
+
+
+# Suppress noise about console usage from errors
+youtube_dl.utils.bug_reports_message = lambda: ''
+
+
+ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
+}
+
+ffmpeg_options = {
+    'options': '-vn'
+}
+
+ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+
+
+class YTDLSource(discord.PCMVolumeTransformer):
+    def __init__(self, source, *, data, volume=0.5):
+        super().__init__(source, volume)
+
+        self.data = data
+
+        self.title = data.get('title')
+        self.url = data.get('url')
+
+    @classmethod
+    async def from_url(cls, url, *, loop=None, stream=False):
+        loop = loop or asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+
+        if 'entries' in data:
+            # take first item from a playlist
+            data = data['entries'][0]
+
+        filename = data['url'] if stream else ytdl.prepare_filename(data)
+        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
 
 class MyClient(discord.Client):
+    async def connect_to_voice(self, channel):
+        if self.vclient is None:
+            self.vclient = await channel.connect()
+        else:
+            await self.vclient.move_to(channel)
+
     async def log(self, message, guild):
         await self.logChannels[guild.id].send(message)
-        print(message)
+        self.logger.info(message)
 
     async def logToChannel(self, message, channel):
         await channel.send(message)
-        print(message)
+        self.logger.info(message)
 
     async def logSpam(self, message, guild):
         await self.logSpamChannels[guild.id].send(message)
-        print(message)
+        self.logger.info(message)
 
     async def on_ready(self):
+        self.vclient = None
+        self.logger = logging.getLogger('Discord.bot')
+        self.logger.setLevel(logging.DEBUG)
+        fh = logging.FileHandler('Discord.log')
+        fh.setLevel(logging.DEBUG)
+
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+
+        self.logger.addHandler(fh)
+        self.logger.addHandler(ch)
+
         self.logChannels = {}
         self.logSpamChannels = {}
-        print('logged on as', self.user)
+        self.deleteChannel = {}
+        self.logger.info('logged on as ' + str(self.user))
         for c in self.get_all_channels():
             if c.name == 'log':
                 self.logChannels[c.guild.id] = c
             elif c.name == 'log-spam':
                 self.logSpamChannels[c.guild.id] = c
+            elif c.name == 'deleted':
+                self.deleteChannel[c.guild.id] = c
         for c in self.logChannels:
-            print(f'found channel: {self.logChannels[c].name} on server: **{self.logChannels[c].guild.name}**')
+            self.logger.info(f'found channel: {self.logChannels[c].name} on server: **{self.logChannels[c].guild.name}**')
         for c in self.logSpamChannels:
-            print(f'found spam channel: {self.logSpamChannels[c].name} on server: **{self.logSpamChannels[c].guild.name}**')
+            self.logger.info(f'found spam channel: {self.logSpamChannels[c].name} on server: **{self.logSpamChannels[c].guild.name}**')
+        for c in self.deleteChannel:
+            self.logger.info(f'found channel: {self.deleteChannel[c].name} on server: **{self.deleteChannel[c].guild.name}**')
+        self.logger.info(discord.opus.is_loaded())
 
     async def on_message(self, message):
         if message.author == self.user:
             return
         if message.content == 'ping':
-            await self.logToChannel(f'pong back to **{str(message.author)}**', message.channel)
-            await self.logSpam(f'received ping from **{str(message.author)}**', message.guild)
+            msg = 'Pong back to ' + message.author.mention
+            await message.channel.send(msg)
+            self.logger.info(msg)
+        if message.content == '!novoice' and self.vclient is not None:
+            await self.vclient.disconnect()
+            self.vclient = None
+        if message.content.startswith('!voice'):
+            url = message.content[7:]
+            self.logger.info('Request to stream url: ' + url)
+            ch = None
+            for c in self.get_all_channels():
+                if c.name == 'Pokec' and c.guild.id == message.guild.id:
+                    ch = c
+                    break
+            await self.connect_to_voice(ch)
+            player = await YTDLSource.from_url(url, loop=self.loop)
+            self.vclient.play(player, after=lambda e: self.logger.error('Player error: %s' % e) if e else None)
+            # await vclient.disconnect()
+
+    async def on_message_delete(self, message):
+        channel = self.deleteChannel[message.guild.id]
+        if message.channel.id == channel.id:
+            return
+        s = r"```?"
+        r = r""
+        message_escaped = '```' + re.sub(s, r, message.content) + '```'
+#         files = []
+
+        if len(message.embeds) > 0:
+            message_escaped = message_escaped + '\nEmbeded links:'
+        for e in message.embeds:
+            message_escaped = message_escaped + '\n' + e.url
+
+#         if len(message.attachments) > 0:
+#             message_escaped = message_escaped + '\nAttachments:'
+#         for a in message.attachments:
+#             files.push(a.read())
+
+        msg = f'deleted message from: **{message.author.display_name}** in channel **{message.channel.name}**\nMessage:\n{message_escaped}'
+        await channel.send(content=msg)
 
     async def on_guild_channel_create(self, channel):
-        await self.log(f'**{str(channel)}** created', channel.guild)
+        await self.log(f'**Channel {str(channel)}** created', channel.guild)
 
     async def on_guild_channel_delete(self, channel):
-        await self.log(f'**{str(channel)}** deleted', channel.guild)
+        await self.log(f'**Channel {str(channel)}** deleted', channel.guild)
 
     async def on_guild_channel_update(self, before, after):
         if (before.name != after.name):
@@ -55,6 +173,9 @@ class MyClient(discord.Client):
 
     async def on_member_join(self, member):
         await self.log(f'Member **{str(member)}** joined', member.guild)
+        for role in member.guild.roles:
+            if (role.name == 'Outsider'):
+                await member.add_roles(role)
 
     async def on_member_remove(self, member):
         await self.log(f'Member **{str(member)}** was removed or left', member.guild)
@@ -134,4 +255,5 @@ class MyClient(discord.Client):
 
 
 client = MyClient()
-client.run('NTg2MTE3Mjg3MTQwOTE3MjYw.XPjW_Q.83TbJxOH_E9z6CEXmCxu7y8b-xk')
+secret = os.environ['BOT_SECRET']
+client.run(secret)
