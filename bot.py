@@ -131,22 +131,21 @@ class MyClient(discord.Client):
         await self.connect_to_voice(message.author.voice.channel)
         if (self.vclient.is_playing()):
             self.vclient.stop()
-        player = await YTDLSource.from_url(url, loop=self.loop)
+        player = await YTDLSource.from_url(url, loop=self.loop, stream=True)
         self.vclient.play(player, after=lambda e: self.logger.error('Player error: %s' % e) if e else None)
 
     async def on_message(self, message):
         if message.author == self.user:
             return
-        async with message.channel.typing():
-            if message.content == 'ping':
-                msg = 'Pong back to ' + message.author.mention
-                await message.channel.send(msg)
-                self.logger.info(msg)
-            if message.content == '!novoice' and self.vclient is not None:
-                await self.vclient.disconnect()
-                self.vclient = None
-            if message.content.startswith('!voice'):
-                await self.processVoice(message)
+        if message.content == 'ping':
+            msg = 'Pong back to ' + message.author.mention
+            await message.channel.send(msg)
+            self.logger.info(msg)
+        if message.content == '!novoice' and self.vclient is not None:
+            await self.vclient.disconnect()
+            self.vclient = None
+        if message.content.startswith('!voice'):
+            await self.processVoice(message)
 
     async def on_message_delete(self, message):
         channel = self.deleteChannel[message.guild.id]
