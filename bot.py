@@ -106,30 +106,47 @@ class MyClient(discord.Client):
             self.logger.info(f'found spam channel: {self.logSpamChannels[c].name} on server: **{self.logSpamChannels[c].guild.name}**')
         for c in self.deleteChannel:
             self.logger.info(f'found channel: {self.deleteChannel[c].name} on server: **{self.deleteChannel[c].guild.name}**')
-        self.logger.info(discord.opus.is_loaded())
+        if (discord.opus.is_loaded()):
+            self.logger.info('Voice lib loaded')
+        else:
+            self.logger.info('Unable to load voice library')
+
+    async def processVoice(self, message):
+        url = message.content[7:]
+        self.logger.info('Request to stream url: ' + url)
+
+        if not discord.opus.is_loaded():
+            await self.logToChannel('Unable to load voice library', message.channel)
+            return
+
+        if not message.author.voice:
+            await self.logToChannel('User not connected to voice channel', message.channel)
+            return
+
+        blacklist = ['Dungeon', 'Raid', 'Arena', 'BG']
+        if any(map(message.author.voice.channel.name.startswith, blacklist)):
+            await self.logToChannel('Unable to broadcast in Dungeon, Raid, Arena or BG channel', message.channel)
+            return
+
+        await self.connect_to_voice(message.author.voice.channel)
+        if (self.vclient.is_playing()):
+            self.vclient.stop()
+        player = await YTDLSource.from_url(url, loop=self.loop)
+        self.vclient.play(player, after=lambda e: self.logger.error('Player error: %s' % e) if e else None)
 
     async def on_message(self, message):
         if message.author == self.user:
             return
-        if message.content == 'ping':
-            msg = 'Pong back to ' + message.author.mention
-            await message.channel.send(msg)
-            self.logger.info(msg)
-        if message.content == '!novoice' and self.vclient is not None:
-            await self.vclient.disconnect()
-            self.vclient = None
-        if message.content.startswith('!voice'):
-            url = message.content[7:]
-            self.logger.info('Request to stream url: ' + url)
-            ch = None
-            for c in self.get_all_channels():
-                if c.name == 'Pokec' and c.guild.id == message.guild.id:
-                    ch = c
-                    break
-            await self.connect_to_voice(ch)
-            player = await YTDLSource.from_url(url, loop=self.loop)
-            self.vclient.play(player, after=lambda e: self.logger.error('Player error: %s' % e) if e else None)
-            # await vclient.disconnect()
+        async with message.channel.typing():
+            if message.content == 'ping':
+                msg = 'Pong back to ' + message.author.mention
+                await message.channel.send(msg)
+                self.logger.info(msg)
+            if message.content == '!novoice' and self.vclient is not None:
+                await self.vclient.disconnect()
+                self.vclient = None
+            if message.content.startswith('!voice'):
+                await self.processVoice(message)
 
     async def on_message_delete(self, message):
         channel = self.deleteChannel[message.guild.id]
@@ -138,17 +155,11 @@ class MyClient(discord.Client):
         s = r"```?"
         r = r""
         message_escaped = '```' + re.sub(s, r, message.content) + '```'
-#         files = []
 
         if len(message.embeds) > 0:
             message_escaped = message_escaped + '\nEmbeded links:'
         for e in message.embeds:
             message_escaped = message_escaped + '\n' + e.url
-
-#         if len(message.attachments) > 0:
-#             message_escaped = message_escaped + '\nAttachments:'
-#         for a in message.attachments:
-#             files.push(a.read())
 
         msg = f'deleted message from: **{message.author.display_name}** in channel **{message.channel.name}**\nMessage:\n{message_escaped}'
         await channel.send(content=msg)
