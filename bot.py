@@ -16,9 +16,9 @@ ytdl_format_options = {
     'restrictfilenames': True,
     'noplaylist': True,
     'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': True,
+    'ignoreerrors': True,
+    'logtostderr': True,
+    'quiet': False,
     'no_warnings': True,
     'default_search': 'auto',
     'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
@@ -54,6 +54,18 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 
 class MyClient(discord.Client):
+    async def voiceAlone(self):
+        if (self.vclient is None):
+            return
+        if len(self.vclient.channel.members) == 1:
+            await self.disconnect_from_voice()
+
+    async def disconnect_from_voice(self):
+        if (self.vclient is None):
+            return
+        await self.vclient.disconnect()
+        self.vclient = None
+
     async def connect_to_voice(self, channel):
         if self.vclient is None:
             self.vclient = await channel.connect()
@@ -112,8 +124,14 @@ class MyClient(discord.Client):
             self.logger.info('Unable to load voice library')
 
     async def processVoice(self, message):
-        url = message.content[7:]
-        self.logger.info('Request to stream url: ' + url)
+        urlRe = re.findall("^!voice (https://www.youtube.com/watch\\?v=.{11})$", message.content)
+        if (len(urlRe) != 1):
+            await self.logToChannel('Unable to parse youtube url', message.channel)
+            return
+
+        url = urlRe[0]
+
+        self.logger.info('Request from '+str(message.author)+' to stream url: ' + url)
 
         if not discord.opus.is_loaded():
             await self.logToChannel('Unable to load voice library', message.channel)
@@ -124,6 +142,7 @@ class MyClient(discord.Client):
             return
 
         blacklist = ['Dungeon', 'Raid', 'Arena', 'BG']
+        whitelist = ['hellmen', 'Lumpu', 'Aloveon']
         if any(map(message.author.voice.channel.name.startswith, blacklist)):
             await self.logToChannel('Unable to broadcast in Dungeon, Raid, Arena or BG channel', message.channel)
             return
@@ -131,7 +150,7 @@ class MyClient(discord.Client):
         await self.connect_to_voice(message.author.voice.channel)
         if (self.vclient.is_playing()):
             self.vclient.stop()
-        player = await YTDLSource.from_url(url, loop=self.loop, stream=True)
+        player = await YTDLSource.from_url(url, loop=self.loop, stream=False)
         self.vclient.play(player, after=lambda e: self.logger.error('Player error: %s' % e) if e else None)
 
     async def on_message(self, message):
@@ -142,8 +161,7 @@ class MyClient(discord.Client):
             await message.channel.send(msg)
             self.logger.info(msg)
         if message.content == '!novoice' and self.vclient is not None:
-            await self.vclient.disconnect()
-            self.vclient = None
+            await self.disconnect_from_voice()
         if message.content.startswith('!voice'):
             await self.processVoice(message)
 
@@ -182,13 +200,13 @@ class MyClient(discord.Client):
             await self.log(f'Channel **{after.name}** changed category from **{before.category.name}** to **{after.category.name}**', after.guild)
 
     async def on_member_join(self, member):
-        await self.log(f'Member **{str(member)}** joined', member.guild)
+        await self.log(f'Member **{str(member)}({member.display_name})** joined', member.guild)
         for role in member.guild.roles:
             if (role.name == 'Outsider'):
                 await member.add_roles(role)
 
     async def on_member_remove(self, member):
-        await self.log(f'Member **{str(member)}** was removed or left', member.guild)
+        await self.log(f'Member **{str(member)}({member.display_name})** was removed or left', member.guild)
 
     async def on_member_update(self, before, after):
         if (before.display_name != after.display_name):
@@ -205,7 +223,7 @@ class MyClient(discord.Client):
                 await self.log(f'[{added}] roles were added to **{after.display_name}**', after.guild)
 
     async def on_guild_update(self, before, after):
-        await self.log(f'Server **{str(before)}** was changed from **{str(before)}** to **{str(after)}**', after.guild)
+        await self.log(f'Server **{str(before)}** was changed from **{str(before)}** to **{str(after)}**', after)
 
     async def on_guild_role_create(self, role):
         await self.log(f'Role **{str(role)}** was created', role.guild)
@@ -215,41 +233,43 @@ class MyClient(discord.Client):
 
     async def on_guild_role_update(self, before, after):
         pass
-        await self.log(f'Role **{str(before)}** was updated', after.guild)
+        #await self.log(f'Role **{str(before)}** was updated', after.guild)
 
     async def on_voice_state_update(self, member, before, after):
         if before.channel is None:
-            await self.logSpam(f'**{str(member)}** has joined **{after.channel.name}**', member.guild)
+            await self.logSpam(f'**{str(member)}({member.display_name})** has joined **{after.channel.name}**', member.guild)
         elif after.channel is None:
-            await self.logSpam(f'**{str(member)}** has left **{before.channel.name}**', member.guild)
+            await self.voiceAlone()
+            await self.logSpam(f'**{str(member)}({member.display_name})** has left **{before.channel.name}**', member.guild)
         elif before.channel.name != after.channel.name:
-            await self.logSpam(f'**{str(member)}** has changed channel from "{before.channel.name}" to "{after.channel.name}"', member.guild)
+            await self.voiceAlone()
+            await self.logSpam(f'**{str(member)}({member.display_name})** has changed channel from "{before.channel.name}" to "{after.channel.name}"', member.guild)
 
         if before.deaf != after.deaf:
             if (after.deaf):
-                await self.logSpam(f'**{str(member)}** was deafened by the server', member.guild)
+                await self.logSpam(f'**{str(member)}({member.display_name})** was deafened by the server', member.guild)
             else:
-                await self.logSpam(f'**{str(member)}** was undeafened by the server', member.guild)
+                await self.logSpam(f'**{str(member)}({member.display_name})** was undeafened by the server', member.guild)
         if before.mute != after.mute:
             if (after.mute):
-                await self.logSpam(f'**{str(member)}** was muted by the server', member.guild)
+                await self.logSpam(f'**{str(member)}({member.display_name})** was muted by the server', member.guild)
             else:
-                await self.logSpam(f'**{str(member)}** was unmuted by the server', member.guild)
+                await self.logSpam(f'**{str(member)}({member.display_name})** was unmuted by the server', member.guild)
         if before.self_mute != after.self_mute:
             if (after.self_mute):
-                await self.logSpam(f'**{str(member)}** has muted themself', member.guild)
+                await self.logSpam(f'**{str(member)}({member.display_name})** has muted themself', member.guild)
             else:
-                await self.logSpam(f'**{str(member)}** has unmuted themself', member.guild)
+                await self.logSpam(f'**{str(member)}({member.display_name})** has unmuted themself', member.guild)
         if before.self_deaf != after.self_deaf:
             if (after.self_deaf):
-                await self.logSpam(f'**{str(member)}** has deafened themself', member.guild)
+                await self.logSpam(f'**{str(member)}({member.display_name})** has deafened themself', member.guild)
             else:
-                await self.logSpam(f'**{str(member)}** has undeafened themself', member.guild)
+                await self.logSpam(f'**{str(member)}({member.display_name})** has undeafened themself', member.guild)
         if before.afk != after.afk:
             if (after.afk):
-                await self.logSpam(f'**{str(member)}** went AFK', member.guild)
+                await self.logSpam(f'**{str(member)}({member.display_name})** went AFK', member.guild)
             else:
-                await self.logSpam(f'**{str(member)}** came back from AFK', member.guild)
+                await self.logSpam(f'**{str(member)}({member.display_name})** came back from AFK', member.guild)
 
     async def on_member_ban(self, guild, user):
         await self.log(f'Server **{str(guild)}has banned **{str(user)}**', guild)
