@@ -32,6 +32,10 @@ class Cogs(commands.Cog):
         from .auto import Auto
         self.bot.add_cog(Auto(self.bot))
 
+        self.unload('Grip')
+        from .grip import Grip
+        self.bot.add_cog(Grip(self.bot))
+
         self.unload('Prihlasky')
         from .prihlasky import Prihlasky
         self.bot.add_cog(Prihlasky(self.bot))

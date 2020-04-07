@@ -35,7 +35,7 @@ class Voice(commands.Cog):
         self.vclient = None
 
     async def connect_to_voice(self, channel):
-        if self.vclient is None:
+        if self.vclient is None or not self.vclient.is_connected():
             self.vclient = await channel.connect()
         else:
             await self.vclient.move_to(channel)
@@ -77,4 +77,12 @@ class Voice(commands.Cog):
     async def play(self, ctx, message):
         await self.processVoice(ctx, message)
 
+    @commands.command()
+    async def stop(self, ctx):
+        await self.disconnect_from_voice()
+
+#    @commands.Cog.listener()
+#    async def on_voice_state_update(self, member, before, after):
+#        if (after.channel is None and self.bot.id == member.id):
+#            await disconnect_from_voice()
 

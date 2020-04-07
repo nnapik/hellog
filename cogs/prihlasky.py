@@ -15,7 +15,7 @@ class Prihlasky(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.channel.name == 'prihlaska-prazdna':
-            nick = re.findall(r'Jméno postavy:\s*(\w*)', message.content)
+            nick = re.findall(r'Jméno postavy:?\s*(\w*)', message.content)
             if nick is not None:
                 nickname = nick[0]
                 await message.channel.edit(name='prihlaska-' + nickname)
@@ -26,7 +26,7 @@ class Prihlasky(commands.Cog):
         channel = ctx.channel
         if channel.name.startswith('prihlaska-'):
             for category in ctx.guild.categories:
-                if (category.name == 'archiv prihlasek'):
+                if (category.name == 'archiv-prihlasek'):
                     await channel.edit(category=category)
                     await channel.edit(sync_permissions=True)
                     await channel.edit(position=0)
