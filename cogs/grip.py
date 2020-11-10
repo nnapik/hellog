@@ -1,6 +1,7 @@
 import re
 import importlib
 from discord.ext import commands
+from discord import Status
 
 class Grip(commands.Cog):
     def __init__(self, bot):
@@ -18,6 +19,12 @@ class Grip(commands.Cog):
                     return
                 if m.voice.channel == ctx.channel:
                     await ctx.send("Member already connected")
+                    return
+                if m.status != Status.online:
+                    await ctx.send("Member idle/dnd, do not disturb!")
+                    return
+                if m.voice.channel.name == 'AFK':
+                    await ctx.send("Member is AFK, do not disturb!")
                     return
                 await m.move_to(ctx.author.voice.channel)
 

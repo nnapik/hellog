@@ -40,6 +40,10 @@ class Cogs(commands.Cog):
         from .prihlasky import Prihlasky
         self.bot.add_cog(Prihlasky(self.bot))
 
+        self.unload('Dadgar')
+        from .dadgar import Dadgar
+        self.bot.add_cog(Dadgar(self.bot))
+
     def unload(self, name):
         if (name in self.bot.cogs):
             self.bot.remove_cog(name)
