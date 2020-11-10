@@ -1,0 +1,5 @@
+build:
+  docker:
+    chlivek-bot: Dockerfile
+run:
+  chlivek-bot: python3 bot.py
