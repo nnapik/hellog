@@ -4,7 +4,9 @@ from discord.ext import commands
 
 class Auto(commands.Cog):
     def __init__(self, bot):
+        bot.logger.info("Auto cog initilizing")
         self.bot = bot
+        bot.logger.info("Auto cog initilized")
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):

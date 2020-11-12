@@ -3,8 +3,10 @@ from discord.ext import commands
 
 class Cogs(commands.Cog):
     def __init__(self, bot):
+        bot.logger.info("Initializing cog Cogs")
         self.bot = bot
         self.reload_cogs()
+        bot.logger.info("Cogs cog initialized")
 
     async def reload(self, ctx=None):
         if ctx is not None:

@@ -5,7 +5,9 @@ from discord import Status
 
 class Grip(commands.Cog):
     def __init__(self, bot):
+        bot.logger.info("Grip cog initializing")
         self.bot = bot
+        bot.logger.info("Grip cog initialized")
 
     @commands.command()
     async def grip(self, ctx, message):

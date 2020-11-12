@@ -12,6 +12,7 @@ class Voice(commands.Cog):
             self.logger.info('Voice lib loaded')
         else:
             self.logger.info('Unable to load voice library')
+        self.bot.logger.info("Voice cog initialized")
 
     async def log(self, message, guild):
         await self.bot.log(message, guild)

@@ -6,7 +6,9 @@ from discord.ext import commands
 
 class Log(commands.Cog):
     def __init__(self, bot):
+        bot.logger.info("Log cog initilizing")
         self.bot = bot
+        bot.logger.info("Log cog initilized")
 
     async def log(self, message, guild):
         await self.bot.log(message, guild)
