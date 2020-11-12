@@ -16,8 +16,8 @@ secret = os.environ['BOT_SECRET']
 logger = Logger()
 
 class MyBot(commands.Bot):
-    def __init__(self, command_prefix, logger):
-        super().__init__(command_prefix)
+    def __init__(self, command_prefix, intent, logger):
+        super().__init__(command_prefix, intents=intent)
         self.logger = logger
         self.logChannels = {}
         self.logSpamChannels = {}
@@ -59,7 +59,8 @@ class MyBot(commands.Bot):
         self.logger.info(message)
 
 
-client = MyBot(command_prefix='!', logger=logger)
+intents = discord.Intents.all()
+client = MyBot(command_prefix='!', intent=intents, logger=logger)
 client.add_cog(Cogs(client))
 
 client.run(secret)
