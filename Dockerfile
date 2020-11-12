@@ -5,7 +5,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y libffi-dev python
 #RUN apk add --no-cache --virtual .build-deps gcc musl-dev make
 RUN python3 -m pip install --upgrade pip && python3 -m pip install -U discord.py PyNaCl youtube_dl
 #RUN apk del .build-deps gcc musl-dev make
-ENV BOT_SECRET=
+ENV BOT_SECRET=changeme
 
 COPY *.py ./
 COPY cogs ./cogs
