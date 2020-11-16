@@ -75,7 +75,7 @@ class Auto(commands.Cog):
                         for u in users:
                             message_escaped = message_escaped + '\nUser: ' + u.display_name + ', reaction: ' + reaction.emoji
                     except HTTPException as e:
-                        message_escaped = "\nCount: " + str(reaction.count) + ', reaction: ' + reaction.emoji
+                        message_escaped = "\nCount: " + str(reaction.count) + ', reaction: ' + str(reaction.emoji)
         except HTTPException as e:
             message_escaped += '\nUnable to load reactions: ' + str(e)
 
