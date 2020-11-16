@@ -6,6 +6,7 @@ class Auto(commands.Cog):
     def __init__(self, bot):
         bot.logger.info("Auto cog initilizing")
         self.bot = bot
+        self.channels = {}
         bot.logger.info("Auto cog initilized")
 
     @commands.Cog.listener()
@@ -13,15 +14,50 @@ class Auto(commands.Cog):
         channel = self.bot.deleteChannels[message.guild.id]
         if (message.channel.id == channel.id):
             return
-        s = r"```?"
-        r = r""
-        message_escaped = '```' + re.sub(s, r, message.content) + '```'
-
-        if (len (message.embeds) > 0):
-            message_escaped = message_escaped + '\nEmbeded links:'
-            for e in message.embeds:
-                message_escaped = message_escaped + '\n' + e.url
+        message_escaped = Auto.escape(message)
 
         msg = f'deleted message from: **{message.author.display_name}** in channel **{message.channel.name}**\nMessage:\n{message_escaped}'
         await channel.send(content=msg)
+
+    async def getArchivChannels(self):
+        for c in self.bot.get_all_channels():
+            if c.name.endswith('-archiv'):
+                self.channels[c.name[:-7]] = c
+        self.bot.logger.info("Auto found " +str(len(self.channels))+ " archiv channels")
+        self.bot.logger.info(str(self.channels))
+
+    @commands.command()
+    @commands.is_owner()
+    async def move(self, ctx):
+        await ctx.message.delete()
+        channel = ctx.channel
+        if channel.name not in self.channels.keys():
+            #try to refresh channel list
+            await self.getArchivChannels();
+            if channel.name not in self.channels.keys():
+                await ctx.send("Unable to find archiv channel")
+                return
+
+        a_channel = self.channels[channel.name]
+        messages = await channel.history(limit=123).flatten()
+        for m in messages[::-1]:
+            if (m.pinned):
+                continue;
+
+            message_escaped = Auto.escape(m)
+            msg = f'Moved message from **{m.author.display_name}** from channel **{m.channel.name}**\nTimestamp:{m.created_at}\nMessage:\n{message_escaped}'
+            await a_channel.send(msg)
+            await m.delete()
+
+    def escape(message):
+        s = r"```?"
+        r = r""
+        message_escaped = '```' + re.sub(s, r, message.content) + '```'
+        if (len (message.embeds) > 0):
+            message_escaped = message_escaped + '\nEmbeded links:'
+            for e in message.embeds:
+                message_escaped = message_escaped + '\n' + str(e.url)
+        return message_escaped
+
+
 
