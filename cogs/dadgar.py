@@ -16,7 +16,7 @@ class Dadgar(commands.Cog):
         self.lines.append('Defeat is assured.')
         bot.logger.info("Dadgar cog initialized")
 
-    @commands.command()
-    async def khadgar(self, ctx):
+    @commands.command(name='khadgar', aliases=['dadgar', 'khadgar,', 'dadgar,', 'hellbot', 'hellbot,'])
+    async def khadgar(self, ctx, **attrs):
         await ctx.send(ctx.author.mention + ': ' + random.choice(self.lines))
 
