@@ -73,7 +73,7 @@ class Auto(commands.Cog):
                     try:
                         users = await reaction.users().flatten()
                         for u in users:
-                            message_escaped = message_escaped + '\nUser: ' + u.display_name + ', reaction: ' + reaction.emoji
+                            message_escaped = message_escaped + '\nUser: ' + u.display_name + ', reaction: ' + str(reaction.emoji)
                     except HTTPException as e:
                         message_escaped = "\nCount: " + str(reaction.count) + ', reaction: ' + str(reaction.emoji)
         except HTTPException as e:
