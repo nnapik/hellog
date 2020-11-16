@@ -14,7 +14,7 @@ class Auto(commands.Cog):
         channel = self.bot.deleteChannels[message.guild.id]
         if (message.channel.id == channel.id):
             return
-        message_escaped = Auto.escape(message)
+        message_escaped = await Auto.escape(message)
 
         msg = f'deleted message from: **{message.author.display_name}** in channel **{message.channel.name}**\nMessage:\n{message_escaped}'
         await channel.send(content=msg)
@@ -44,12 +44,12 @@ class Auto(commands.Cog):
             if (m.pinned):
                 continue;
 
-            message_escaped = Auto.escape(m)
+            message_escaped = await Auto.escape(m)
             msg = f'Moved message from **{m.author.display_name}** from channel **{m.channel.name}**\nTimestamp:{m.created_at}\nMessage:\n{message_escaped}'
             await a_channel.send(msg)
             await m.delete()
 
-    def escape(message):
+    async def escape(message):
         s = r"```?"
         r = r""
         message_escaped = '```' + re.sub(s, r, message.content) + '```'
@@ -57,6 +57,12 @@ class Auto(commands.Cog):
             message_escaped = message_escaped + '\nEmbeded links:'
             for e in message.embeds:
                 message_escaped = message_escaped + '\n' + str(e.url)
+        if (len (message.reactions) > 0):
+            message_escaped = message_escaped + '\nReactions:'
+            for reaction in message.reactions:
+                users = await reaction.users().flatten()
+                for u in users:
+                    message_escaped = message_escaped + '\nUser: ' + u.display_name + ', reaction: ' + reaction.emoji
         return message_escaped
 
 
