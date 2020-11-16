@@ -1,6 +1,7 @@
 import re
 import importlib
 from discord.ext import commands
+from discord import HTTPException
 
 class Auto(commands.Cog):
     def __init__(self, bot):
@@ -52,17 +53,32 @@ class Auto(commands.Cog):
     async def escape(message):
         s = r"```?"
         r = r""
+        #replace quotes
         message_escaped = '```' + re.sub(s, r, message.content) + '```'
-        if (len (message.embeds) > 0):
-            message_escaped = message_escaped + '\nEmbeded links:'
-            for e in message.embeds:
-                message_escaped = message_escaped + '\n' + str(e.url)
-        if (len (message.reactions) > 0):
-            message_escaped = message_escaped + '\nReactions:'
-            for reaction in message.reactions:
-                users = await reaction.users().flatten()
-                for u in users:
-                    message_escaped = message_escaped + '\nUser: ' + u.display_name + ', reaction: ' + reaction.emoji
+
+        #try to add embeds
+        try:
+            if (len (message.embeds) > 0):
+                message_escaped = message_escaped + '\nEmbeded links:'
+                for e in message.embeds:
+                    message_escaped = message_escaped + '\n' + str(e.url)
+        except HTTPException as e:
+            message_escaped += '\nUnable to load embeds: ' + str(e)
+
+        #try to add reactions
+        try:
+            if (len (message.reactions) > 0):
+                message_escaped = message_escaped + '\nReactions:'
+                for reaction in message.reactions:
+                    try:
+                        users = await reaction.users().flatten()
+                        for u in users:
+                            message_escaped = message_escaped + '\nUser: ' + u.display_name + ', reaction: ' + reaction.emoji
+                    except HTTPException as e:
+                        message_escaped = "\nCount: " + str(reaction.count) + ', reaction: ' + reaction.emoji
+        except HTTPException as e:
+            message_escaped += '\nUnable to load reactions: ' + str(e)
+
         return message_escaped
 
 
