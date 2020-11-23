@@ -29,6 +29,17 @@ class Auto(commands.Cog):
 
     @commands.command()
     @commands.is_owner()
+    async def purge(self, ctx):
+    	await ctx.message.delete()
+    	channel = ctx.channel
+        messages = await channel.history(limit=123).flatten()
+        for m in messages[::-1]:
+            if (m.pinned):
+                continue;
+            await m.delete()
+
+    @commands.command()
+    @commands.is_owner()
     async def move(self, ctx):
         await ctx.message.delete()
         channel = ctx.channel
