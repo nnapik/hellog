@@ -31,3 +31,18 @@ class Prihlasky(commands.Cog):
                     await channel.edit(sync_permissions=True)
                     await channel.edit(position=0)
                     break
+
+    @commands.has_any_role('Personalni oddeleni (HR)', 'Guild Officir', 'Admin')
+    @commands.command()
+    async def inv(self, ctx):
+        await self.archiv(ctx)
+        channel = ctx.channel
+        if channel.name.startswith('prihlaska-'):
+            nick = re.match(r'prihlaska-(.*)', channel.name)[1]
+            messages = await channel.history(limit=123).flatten()
+            first = messages[-1]
+            author = first.author
+            for role in channel.guild.roles:
+                if (role.name == 'Member'):
+                    await author.add_roles(role)
+            await author.edit(nick=nick)
