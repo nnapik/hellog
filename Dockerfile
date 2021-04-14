@@ -1,4 +1,4 @@
-FROM python:3.9-rc-buster
+FROM python:3.10-rc-buster
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y libffi-dev python3-dev ffmpeg
 #RUN apk update && apk add libffi-dev python3-dev ffmpeg
