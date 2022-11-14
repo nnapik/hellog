@@ -38,7 +38,7 @@ class Prihlasky(commands.Cog):
         await self.archiv(ctx)
         channel = ctx.channel
         if channel.name.startswith('prihlaska-'):
-            nick = re.match(r'prihlaska-(.*)', channel.name)[1]
+            nick = re.match(r'prihlaska-(.*)', channel.name)[1].title()
             messages = await channel.history(limit=123).flatten()
             first = messages[-1]
             author = first.author
