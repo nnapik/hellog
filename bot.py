@@ -23,6 +23,10 @@ class MyBot(commands.Bot):
         self.logSpamChannels = {}
         self.deleteChannels = {}
     async def on_ready(self):
+        cogs = Cogs(self)
+        await client.add_cog(cogs)
+        await cogs.reload_cogs()
+
         self.logger.info('logged on as ' + str(self.user))
 
         for c in self.get_all_channels():
@@ -61,6 +65,5 @@ class MyBot(commands.Bot):
 
 intents = discord.Intents.all()
 client = MyBot(command_prefix='!', intent=intents, logger=logger)
-client.add_cog(Cogs(client))
 
 client.run(secret)

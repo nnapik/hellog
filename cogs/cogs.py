@@ -5,7 +5,6 @@ class Cogs(commands.Cog):
     def __init__(self, bot):
         bot.logger.info("Initializing cog Cogs")
         self.bot = bot
-        self.reload_cogs()
         bot.logger.info("Cogs cog initialized")
 
     async def reload(self, ctx=None):
@@ -13,39 +12,39 @@ class Cogs(commands.Cog):
             await ctx.send("Reloading plugins")
         self.reload_cogs()
 
-    def reload_cogs(self):
-        self.unload('Ping')
+    async def reload_cogs(self):
+        await self.unload('Ping')
         from .ping import Ping
-        self.bot.add_cog(Ping())
+        await self.bot.add_cog(Ping())
 
-        self.unload('Die')
+        await self.unload('Die')
         from .die import Die
-        self.bot.add_cog(Die(self.bot))
+        await self.bot.add_cog(Die(self.bot))
 
-        self.unload('Log')
+        await self.unload('Log')
         from .log import Log
-        self.bot.add_cog(Log(self.bot))
+        await self.bot.add_cog(Log(self.bot))
 
-        self.unload('Voice')
+        await self.unload('Voice')
         from .voice import Voice
-        self.bot.add_cog(Voice(self.bot))
+        await self.bot.add_cog(Voice(self.bot))
 
-        self.unload('Auto')
+        await self.unload('Auto')
         from .auto import Auto
-        self.bot.add_cog(Auto(self.bot))
+        await self.bot.add_cog(Auto(self.bot))
 
-        self.unload('Grip')
+        await self.unload('Grip')
         from .grip import Grip
-        self.bot.add_cog(Grip(self.bot))
+        await self.bot.add_cog(Grip(self.bot))
 
-        self.unload('Prihlasky')
+        await self.unload('Prihlasky')
         from .prihlasky import Prihlasky
-        self.bot.add_cog(Prihlasky(self.bot))
+        await self.bot.add_cog(Prihlasky(self.bot))
 
-        self.unload('Dadgar')
+        await self.unload('Dadgar')
         from .dadgar import Dadgar
-        self.bot.add_cog(Dadgar(self.bot))
+        await self.bot.add_cog(Dadgar(self.bot))
 
-    def unload(self, name):
+    async def unload(self, name):
         if (name in self.bot.cogs):
-            self.bot.remove_cog(name)
+            await self.bot.remove_cog(name)
