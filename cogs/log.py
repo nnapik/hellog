@@ -118,7 +118,7 @@ class Log(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel):
-        await self.log(f'**Channel {str(channel)}** created', channel.guild)
+        await self.log(f'**Channel {channel.mention}** created', channel.guild)
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
@@ -127,12 +127,12 @@ class Log(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_channel_update(self, before, after):
         if (before.name != after.name):
-            await self.log(f'Channel **{before.name}** was renamed to **{after.name}**', after.guild)
+            await self.log(f'Channel {after.mention}: **{before.name}** was renamed to **{after.name}**', after.guild)
 
         if (before.category is None and after.category is not None):
-            await self.log(f'Channel **{after.name}** was moved to **{after.category.name}**', after.guild)
+            await self.log(f'Channel {after.mention} was moved to **{after.category.name}**', after.guild)
         elif (before.category is not None and after.category is None):
-            await self.log(f'Channel **{after.name}** was removed from category **{before.category.name}**', after.guild)
+            await self.log(f'Channel {after.mention} was removed from category **{before.category.name}**', after.guild)
 
         if (before.category != after.category):
-            await self.log(f'Channel **{after.name}** changed category from **{before.category.name}** to **{after.category.name}**', after.guild)
+            await self.log(f'Channel {after.mention} changed category from **{before.category.name}** to **{after.category.name}**', after.guild)
