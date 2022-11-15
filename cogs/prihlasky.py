@@ -34,9 +34,7 @@ class Prihlasky(commands.Cog):
         if channel.name.startswith('prihlaska-'):
             for category in ctx.guild.categories:
                 if (category.name == 'archiv-prihlasek'):
-                    await channel.edit(category=category)
-                    await channel.edit(sync_permissions=True)
-                    await channel.edit(position=0)
+                    await channel.move(beginning=True, category=category, sync_permissions=True)
                     break
 
     @commands.has_any_role('Personalni oddeleni (HR)', 'Guild Officir', 'Admin')
