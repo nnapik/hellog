@@ -13,7 +13,7 @@ class Prihlasky(commands.Cog):
     async def on_member_join(self, member):
         init_role = self.bot.get_role(init_role_name)
         if (init_role is not None):
-            await member.add_roles(role)
+            await member.add_roles(init_role)
 
     @commands.Cog.listener()
     async def on_message(self, message):
