@@ -11,7 +11,7 @@ class Prihlasky(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        init_role = self.bot.get_role(init_role_name)
+        init_role = self.bot.get_role(member.guild, self.init_role_name)
         if (init_role is not None):
             await member.add_roles(init_role)
 
