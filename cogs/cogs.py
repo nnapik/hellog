@@ -45,6 +45,10 @@ class Cogs(commands.Cog):
         from .dadgar import Dadgar
         await self.bot.add_cog(Dadgar(self.bot))
 
+        await self.unload('Download')
+        from .download import Download
+        await self.bot.add_cog(Download(self.bot))
+
     async def unload(self, name):
         if (name in self.bot.cogs):
             await self.bot.remove_cog(name)
