@@ -14,6 +14,9 @@ class log:
         self.channel_id = m.channel.id
         self.category = m.channel.category.name
         self.category_id = m.channel.category.id
+        self.author_id = m.author.id
+        self.author_nick = m.author.display_name
+        self.author_disc = m.author.discriminator
         self.author = m.author.name
         self.message = m.content
     def __lt__(self, other):
