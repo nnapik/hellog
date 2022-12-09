@@ -1,6 +1,9 @@
+import os
 import json
 from discord.ext import commands
 import discord
+import boto3
+from botocore.client import Config
 
 class log:
     def __init__(self, m):
@@ -22,6 +25,18 @@ def obj_dict(obj):
 class Download(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.session = boto3.Session()
+        self.client = self.session.client('s3',
+                        region_name='fra1',
+                        endpoint_url='https://fra1.digitaloceanspaces.com',
+                        aws_access_key_id=os.getenv('SPACES_KEY'),
+                        aws_secret_access_key=os.getenv('SPACES_SECRET'),
+                        config=Config(s3={'addressing_style': 'virtual'}))
+        self.bucket = os.getenv('SPACES_BUCKET')
+
+    def upload(self, fname, guild):
+        self.client.upload_file(fname, self.bucket, f'prihlasky/{guild}/'+fname)
+
 
     @commands.command(name='download')
     @commands.is_owner()
@@ -31,7 +46,7 @@ class Download(commands.Cog):
         content = await self.dw_channel(ctx.channel)
         fname = ctx.channel.name + '.json'
         self.dump(content, fname)
-        await author.send(f'{ctx.guild.name}-{ctx.channel.category.name}-{ctx.channel.name}', file=discord.File(fname))
+        self.upload(fname, ctx.channel.guild.name)
 
     async def dw_channel(self, channel):
         content = []
@@ -52,5 +67,5 @@ class Download(commands.Cog):
             content = await self.dw_channel(c)
             fname = c.name + '.json'
             self.dump(content, fname)
-            await author.send(f'{ctx.guild.name}-{ctx.channel.category.name}-{c.name}', file=discord.File(fname))
+            self.upload(fname, c.guild.name)
 
