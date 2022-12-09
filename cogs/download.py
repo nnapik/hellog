@@ -1,5 +1,6 @@
 import json
 from discord.ext import commands
+import discord
 
 class log:
     def __init__(self, m):
@@ -25,12 +26,31 @@ class Download(commands.Cog):
     @commands.command(name='download')
     @commands.is_owner()
     async def download(self, ctx, **attrs):
+        author = ctx.message.author
         await ctx.message.delete()
+        content = await self.dw_channel(ctx.channel)
+        fname = ctx.channel.name + '.json'
+        self.dump(content, fname)
+        await author.send(f'{ctx.guild.name}-{ctx.channel.category.name}-{ctx.channel.name}', file=discord.File(fname))
+
+    async def dw_channel(self, channel):
         content = []
-        async for m in ctx.channel.history():
+        async for m in channel.history():
             l = log(m)
             content.append(l)
+        return content
+    def dump(self, content, fname):
+        with open(fname, 'w') as f:
+            json.dump(sorted(content), f, default=obj_dict, indent=4)
 
-        print(json.dumps(sorted(content), default=obj_dict))
-
+    @commands.command(name='dw_cat')
+    @commands.is_owner()
+    async def dw_category(self, ctx, **attrs):
+        author = ctx.message.author
+        await ctx.message.delete()
+        for c in ctx.channel.category.channels:
+            content = await self.dw_channel(c)
+            fname = c.name + '.json'
+            self.dump(content, fname)
+            await author.send(f'{ctx.guild.name}-{ctx.channel.category.name}-{c.name}', file=discord.File(fname))
 
