@@ -37,8 +37,8 @@ class Download(commands.Cog):
                         config=Config(s3={'addressing_style': 'virtual'}))
         self.bucket = os.getenv('SPACES_BUCKET')
 
-    def upload(self, fname, guild):
-        self.client.upload_file(fname, self.bucket, f'prihlasky/{guild}/'+fname)
+    def upload(self, fname, guild, path):
+        self.client.upload_file(fname, self.bucket, f'{guild}/{path}/'+fname)
 
 
     @commands.command(name='download')
@@ -49,7 +49,7 @@ class Download(commands.Cog):
         content = await self.dw_channel(ctx.channel)
         fname = ctx.channel.name + '.json'
         self.dump(content, fname)
-        self.upload(fname, ctx.channel.guild.name)
+        self.upload(fname, ctx.channel.guild.name, ctx.channel.category.name)
 
     async def dw_channel(self, channel):
         content = []
@@ -63,12 +63,20 @@ class Download(commands.Cog):
 
     @commands.command(name='dw_cat')
     @commands.is_owner()
-    async def dw_category(self, ctx, **attrs):
+    async def backup_category(self, ctx, **attrs):
         author = ctx.message.author
         await ctx.message.delete()
         for c in ctx.channel.category.channels:
             content = await self.dw_channel(c)
             fname = c.name + '.json'
             self.dump(content, fname)
-            self.upload(fname, c.guild.name)
+            self.upload(fname, c.guild.name, c.category.name)
+
+    @commands.command(name='delete_category')
+    @commands.is_owner()
+    async def delete_category(self, ctx, **attrs):
+        author = ctx.message.author
+        await ctx.message.delete()
+        for c in ctx.channel.category.channels:
+            await c.delete(reason="backup and cleanup")
 
