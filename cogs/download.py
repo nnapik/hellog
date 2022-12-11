@@ -76,7 +76,10 @@ class Download(commands.Cog):
     @commands.is_owner()
     async def delete_category(self, ctx, **attrs):
         author = ctx.message.author
+        category = ctx.channel.category
+        reason = 'backup and cleanup'
         await ctx.message.delete()
         for c in ctx.channel.category.channels:
-            await c.delete(reason="backup and cleanup")
+            await c.delete(reason=reason)
+        await category.delete(reason=reason)
 
