@@ -22,7 +22,7 @@ class Prihlasky(commands.Cog):
         if not hasattr(message.channel, 'name') or message.channel.name != 'prihlaska-prazdna':
             return
         nick = re.findall(r'Jméno postavy:?\s*(\w*)', message.content)
-        if nick is None:
+        if nick is None or len(nick) == 0:
             return
         nickname = nick[0]
         await message.channel.edit(name='prihlaska-' + nickname)
