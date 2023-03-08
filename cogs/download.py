@@ -38,18 +38,10 @@ class Download(commands.Cog):
         self.bucket = os.getenv('SPACES_BUCKET')
 
     def upload(self, fname, guild, path):
-        self.client.upload_file(fname, self.bucket, f'{guild}/{path}/'+fname)
-
-
-    @commands.command(name='download')
-    @commands.is_owner()
-    async def download(self, ctx, **attrs):
-        author = ctx.message.author
-        await ctx.message.delete()
-        content = await self.dw_channel(ctx.channel)
-        fname = ctx.channel.name + '.json'
-        self.dump(content, fname)
-        self.upload(fname, ctx.channel.guild.name, ctx.channel.category.name)
+        s3_path = f'{guild}/{path}/'+fname
+        self.bot.logger.info(f'uploading file: {s3_path}')
+        self.client.upload_file(fname, self.bucket, s3_path)
+        self.bot.logger.info(f'uploaded file: {s3_path}')
 
     async def dw_channel(self, channel):
         content = []
@@ -57,29 +49,43 @@ class Download(commands.Cog):
             l = log(m)
             content.append(l)
         return content
+
+    def get_fname(self, channel):
+        return f'{channel.id}-{channel.name}.json'
+
     def dump(self, content, fname):
         with open(fname, 'w') as f:
             json.dump(sorted(content), f, default=obj_dict, indent=4)
 
+    async def backup_channel(self, channel):
+        content = await self.dw_channel(channel)
+        fname = self.get_fname(channel)
+        self.dump(content, fname)
+        self.upload(fname, channel.guild.name, channel.category.name)
+
+    async def backup_category(self, category):
+        for c in category.channels:
+            await self.backup_channel(c)
+
     @commands.command(name='dw_cat')
     @commands.is_owner()
-    async def backup_category(self, ctx, **attrs):
-        author = ctx.message.author
+    async def download_category_command(self, ctx, **attrs):
         await ctx.message.delete()
-        for c in ctx.channel.category.channels:
-            content = await self.dw_channel(c)
-            fname = c.name + '.json'
-            self.dump(content, fname)
-            self.upload(fname, c.guild.name, c.category.name)
+        await self.backup_category(ctx.channel.category)
 
     @commands.command(name='delete_category')
     @commands.is_owner()
-    async def delete_category(self, ctx, **attrs):
-        author = ctx.message.author
+    async def delete_category_command(self, ctx, **attrs):
         category = ctx.channel.category
         reason = 'backup and cleanup'
         await ctx.message.delete()
         for c in ctx.channel.category.channels:
+            await self.backup_channel(c)
             await c.delete(reason=reason)
         await category.delete(reason=reason)
 
+    @commands.command(name='dw')
+    @commands.is_owner()
+    async def download_channel_command(self, ctx, **attrs):
+        await ctx.message.delete()
+        await self.backup_channel(ctx.channel)

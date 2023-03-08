@@ -28,6 +28,13 @@ class Prihlasky(commands.Cog):
         await message.channel.edit(name='prihlaska-' + nickname)
         await message.channel.category.create_text_channel("prihlaska-prazdna")
 
+    async def fix_full_archiv(self, category):
+        if len(category.channels) >= 50:
+            await category.edit(name = 'archiv-prihlasek-' + str(category.id))
+            await category.clone(name = 'archiv-prihlasek')
+            dw = self.bot.get_cog('Download')
+            await dw.backup_category(category)
+
     @commands.command()
     async def archiv(self, ctx):
         channel = ctx.channel
@@ -35,9 +42,7 @@ class Prihlasky(commands.Cog):
             for category in ctx.guild.categories:
                 if (category.name == 'archiv-prihlasek'):
                     await channel.move(beginning=True, category=category, sync_permissions=True)
-                    if len(category.channels) == 50:
-                         await category.edit(name = 'archiv-prihlasek-' + str(category.id))
-                         await category.clone(name = 'archiv-prihlasek')
+                    await self.fix_full_archiv(category)
                     break
 
     @commands.has_any_role('Personalni oddeleni (HR)', 'Guild Officir', 'Admin')
