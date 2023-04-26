@@ -21,10 +21,13 @@ class Prihlasky(commands.Cog):
             return
         if not hasattr(message.channel, 'name') or message.channel.name != 'prihlaska-prazdna':
             return
-        nick = re.findall(r'Jméno postavy:?\s*(\w*)', message.content)
+        nick = re.findall(r'^.*?Jméno postavy.*?:?\s*(\w*)\s*\(?-?([\w\']*)?\)?$', message.content)
+        print (nick)
         if nick is None or len(nick) == 0:
-            return
-        nickname = nick[0]
+            nickname = 'null'
+        else:
+            nickname = nick[0][0]
+        print (nickname)
         await message.channel.edit(name='prihlaska-' + nickname)
         await message.channel.category.create_text_channel("prihlaska-prazdna")
 
