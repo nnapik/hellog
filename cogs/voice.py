@@ -76,10 +76,12 @@ class Voice(commands.Cog):
 
     @commands.command()
     async def play(self, ctx, message):
+        pass
         await self.processVoice(ctx, message)
 
     @commands.command()
     async def stop(self, ctx):
+        pass
         await self.disconnect_from_voice()
 
 #    @commands.Cog.listener()
