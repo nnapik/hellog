@@ -15,18 +15,40 @@ class Prihlasky(commands.Cog):
         if (init_role is not None):
             await member.add_roles(init_role)
 
+    @staticmethod
+    def try_get_char(texts):
+        regexes = [
+            r'Jm[ée]no postavy\s*:\s*([\w]*)(?:-[\w\' -]*)?',
+            r'https://raider.io/characters/eu/[\w\']+/(\w+)\??',
+            r'https://worldofwarcraft.com/en-gb/character/eu/[\w\']+/(\w+)',
+            r'https://worldofwarcraft.blizzard.com/en-gb/character/eu/[\w\']+/(\w+)'
+        ]
+        for text in texts:
+            for r in regexes:
+                nick = re.findall(r, text)
+                if nick is not None and len(nick) != 0:
+                    return nick[0]
+
+        return None
+
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.id == self.bot.user.id: #filter out own messages
             return
         if not hasattr(message.channel, 'name') or message.channel.name != 'prihlaska-prazdna':
             return
-        nick = re.findall(r'^.*?Jméno postavy.*?:?\s*(\w*)\s*\(?-?([\w\']*)?\)?$', message.content)
+        test_texts = []
+        for e in message.embeds:
+            test_texts.append(str(e.url))
+        test_texts.append(message.content)
+
+        nick = self.try_get_char(test_texts)
         print (nick)
-        if nick is None or len(nick) == 0:
+        if nick is None:
             nickname = 'null'
         else:
-            nickname = nick[0][0]
+            nickname = nick
+
         print (nickname)
         await message.channel.edit(name='prihlaska-' + nickname)
         await message.channel.category.create_text_channel("prihlaska-prazdna")
