@@ -18,6 +18,7 @@ class Prihlasky(commands.Cog):
     @staticmethod
     def try_get_char(texts):
         regexes = [
+            r'[nN]ick\s*:\s*([\w]*)(?:-[\w\' -]*)?',
             r'Jm[ée]no postavy\s*:\s*([\w]*)(?:-[\w\' -]*)?',
             r'https://raider.io/characters/eu/[\w\']+/(\w+)\??',
             r'https://worldofwarcraft.com/en-gb/character/eu/[\w\']+/(\w+)',
