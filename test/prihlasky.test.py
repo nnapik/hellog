@@ -21,6 +21,10 @@ class TestStringMethods(unittest.TestCase):
         nick = Prihlasky.try_get_char(['https://worldofwarcraft.blizzard.com/en-gb/character/eu/drakthul/armory_2'])
         self.assertEqual('armory_2', nick)
 
+    def test_bb(self):
+        nick = Prihlasky.try_get_char(['https://worldofwarcraft.blizzard.com/en-gb/character/eu/burning-blade/burningblade'])
+        self.assertEqual('burningblade', nick)
+
 if __name__ == '__main__':
     unittest.main()
 

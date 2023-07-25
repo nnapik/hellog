@@ -18,9 +18,9 @@ class Prihlasky(commands.Cog):
     @staticmethod
     def try_get_char(texts):
         regexes = [
-            r'https://raider.io/characters/eu/[\w\']+/(\w+)\??',
-            r'https://worldofwarcraft.com/en-gb/character/eu/\w+/(\w+)',
-            r'https://worldofwarcraft.blizzard.com/en-gb/character/eu/\w+/(\w+)',
+            r'https://raider.io/characters/eu/[\w\'\-]+/(\w+)\??',
+            r'https://worldofwarcraft.com/en-gb/character/eu/[\w\-\']+/(\w+)',
+            r'https://worldofwarcraft.blizzard.com/en-gb/character/eu/[\w\-\']+/(\w+)',
             r'[nN]ick\s*:\s*([\w]*)(?:-[\w\' \-]*)?',
             r'[Nn]ick / Jméno postavy \(+server\): (.*)(?:\s?[\+\-]\s?[\w\' \-\d]*)',
             r'Jm[ée]no postavy\s*:\s*([\w]*)(?:-[\w\' \-\d]*)?'
