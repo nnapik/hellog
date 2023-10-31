@@ -37,6 +37,7 @@ class Auto(commands.Cog):
         # add reactions
         try:
             if (len(message.reactions) > 0):
+                reactions = ''
                 for reaction in message.reactions:
                     reactions = reactions + "\nCount: " + str(reaction.count) + ', reaction: ' + str(reaction.emoji)
                 embed.add_field(name='reactions', value=reactions, inline=False)
