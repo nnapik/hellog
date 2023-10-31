@@ -8,11 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Login to dockerhub
+      run: echo '${{ secrets.DOCKERHUB_TOKEN }}' | docker login -u nnapik --password-stdin
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag nnapik/hellog:latest
-    - name: Login to dockerhub
-      with:
-        docker_token: {{ secrets.DOCKERHUB_TOKEN }}
-      run: echo '$docker_token' | docker login -u nnapik --password-stdin
     - name: Push to dockerhub
       run: docker push nnapik:hellog:latest
