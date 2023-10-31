@@ -57,7 +57,7 @@ class Auto(commands.Cog):
         for c in self.bot.get_all_channels():
             if c.name.endswith('-archiv'):
                 self.channels[c.name[:-7]] = c
-        self.bot.logger.info("Auto found " +str(len(self.channels))+ " archiv channels")
+        self.bot.logger.info("Auto found " + str(len(self.channels)) + " archiv channels")
         self.bot.logger.info(str(self.channels))
 
     @commands.command()
@@ -68,7 +68,7 @@ class Auto(commands.Cog):
         messages = await channel.history(limit=123).flatten()
         for m in messages[::-1]:
             if (m.pinned):
-                continue;
+                continue
             await m.delete()
 
     @commands.command()
@@ -77,8 +77,8 @@ class Auto(commands.Cog):
         await ctx.message.delete()
         channel = ctx.channel
         if channel.name not in self.channels.keys():
-            #try to refresh channel list
-            await self.getArchivChannels();
+            # try to refresh channel list
+            await self.getArchivChannels()
             if channel.name not in self.channels.keys():
                 await ctx.send("Unable to find archiv channel")
                 return
@@ -87,7 +87,7 @@ class Auto(commands.Cog):
         messages = await channel.history(limit=123).flatten()
         for m in messages[::-1]:
             if (m.pinned):
-                continue;
+                continue
 
             message_escaped = await Auto.escape(m)
             msg = f'Moved message from **{m.author.display_name}** from channel **{m.channel.name}**\nTimestamp:{m.created_at}\nMessage:\n{message_escaped}'
@@ -97,21 +97,21 @@ class Auto(commands.Cog):
     async def escape(message):
         s = r"```?"
         r = r""
-        #replace quotes
+        # replace quotes
         message_escaped = '```' + re.sub(s, r, message.content) + '```'
 
-        #try to add embeds
+        # try to add embeds
         try:
-            if (len (message.embeds) > 0):
+            if (len(message.embeds) > 0):
                 message_escaped = message_escaped + '\nEmbeded links:'
                 for e in message.embeds:
                     message_escaped = message_escaped + '\n' + str(e.url)
         except HTTPException as e:
             message_escaped += '\nUnable to load embeds: ' + str(e)
 
-        #try to add reactions
+        # try to add reactions
         try:
-            if (len (message.reactions) > 0):
+            if (len(message.reactions) > 0):
                 message_escaped = message_escaped + '\nReactions:'
                 for reaction in message.reactions:
                     try:
@@ -124,6 +124,5 @@ class Auto(commands.Cog):
             message_escaped += '\nUnable to load reactions: ' + str(e)
 
         return message_escaped
-
 
 

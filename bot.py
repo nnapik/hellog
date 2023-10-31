@@ -14,6 +14,7 @@ from cogs.cogs import Cogs
 secret = os.environ['BOT_SECRET']
 admin_id = os.environ['ADMIN_ID']
 
+
 class MyBot(commands.Bot):
     def __init__(self, command_prefix, intent, logger):
         super().__init__(command_prefix, intents=intent)
@@ -22,6 +23,7 @@ class MyBot(commands.Bot):
         self.logSpamChannels = {}
         self.deleteChannels = {}
         self.role_cache = {}
+
     async def on_ready(self):
         cogs = Cogs(self)
         await client.add_cog(cogs)

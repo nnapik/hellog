@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8
-import unittest,re
+import unittest
+import re
 from cogs.prihlasky import Prihlasky
+
 
 class TestStringMethods(unittest.TestCase):
 
@@ -25,6 +27,6 @@ class TestStringMethods(unittest.TestCase):
         nick = Prihlasky.try_get_char(['https://worldofwarcraft.blizzard.com/en-gb/character/eu/burning-blade/burningblade'])
         self.assertEqual('burningblade', nick)
 
+
 if __name__ == '__main__':
     unittest.main()
-
