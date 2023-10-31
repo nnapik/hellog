@@ -22,7 +22,12 @@ class Auto(commands.Cog):
         embed.add_field(name='author', value=message.author.display_name, inline=False)
         embed.add_field(name='category', value=message.channel.category.name, inline=False)
         embed.add_field(name='channel', value=message.channel.name, inline=False)
-        embed.add_field(name='message', value=message.content, inline=False)
+        if len(message.content) > 1024:
+            embed.add_field(name='message', value=message.content, inline=False)
+        else:
+            parts = (len(message.content) % 1024)
+            for p in range(parts):
+                embed.add_field(name="message_part_" + str(p), value=message.content[p * 1024:(p + 1) * 1024])
 
         # add embeds
         message_embeds = ""
