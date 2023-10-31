@@ -1,7 +1,8 @@
 import re
-import importlib
+from discord.embed import Embed
 from discord.ext import commands
 from discord import HTTPException
+
 
 class Auto(commands.Cog):
     def __init__(self, bot):
@@ -15,10 +16,42 @@ class Auto(commands.Cog):
         channel = self.bot.deleteChannels[message.guild.id]
         if (message.channel.id == channel.id):
             return
-        message_escaped = await Auto.escape(message)
+        embed = Embed()
+        embed.title = "Deleted Message"
+        embed.author = message.author.display_name
+        embed.add_field(name='category', value=message.channel.category.name)
+        embed.add_field(name='channel', value=message.channel.name)
+        embed.add_field(name='message', value=message.content)
 
-        msg = f'deleted message from: **{message.author.display_name}** in channel **{message.channel.name}**\nMessage:\n{message_escaped}'
-        await channel.send(content=msg)
+        # add embeds
+        message_embeds = ""
+        try:
+            if (len(message.embeds) > 0):
+                for e in message.embeds:
+                    message_embeds = message_embeds + '\n' + str(e.url)
+        except HTTPException as e:
+            message_embeds += '\nUnable to load embeds: ' + str(e)
+        finally:
+            embed.add_field(name='embeds', value=message_embeds)
+
+        # add reactions
+        reactions = ""
+        try:
+            if (len(message.reactions) > 0):
+                for reaction in message.reactions:
+                    try:
+                        users = [user async for user in reaction.users()]
+                        for u in users:
+                            reactions = reactions + '\nUser: ' + u.display_name + ', reaction: ' + str(reaction.emoji)
+                    except HTTPException as e:
+                        reactions = reactions + "\nUnable to load users: " + str(e)
+                        reactions = reactions + "\nCount: " + str(reaction.count) + ', reaction: ' + str(reaction.emoji)
+        except HTTPException as e:
+            reactions += '\nUnable to load reactions: ' + str(e)
+        finally:
+            embed.add_field(name='reactions', value=reactions)
+
+        await channel.send(embed=embed)
 
     async def getArchivChannels(self):
         for c in self.bot.get_all_channels():
