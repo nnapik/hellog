@@ -8,6 +8,28 @@ class Reactions(commands.Cog):
         self.bot = bot
         self.react_messages = {}
 
+    @commands.is_owner()
+    @commands.command(name='sync_raider')
+    async def sync_raider(self, ctx):
+        g = ctx.message.guild
+        await ctx.message.delete()
+        raider = self.bot.get_role(g, 'Raider')
+        if raider is None:
+            return
+        x_group = self.bot.get_role(g, 'X group')
+        if x_group is None:
+            return
+        e_group = self.bot.get_role(g, 'Early group')
+        if e_group is None:
+            return
+
+        for m in g.members:
+            if raider in m.roles:
+                continue
+            if x_group in m.roles or e_group in m.roles:
+                await m.add_roles(raider)
+                
+
     @commands.has_any_role('Personalni oddeleni (HR)', 'Guild Officir', 'Admin', 'Raid Leader')
     @commands.command(name='add_role')
     async def add_role(self, ctx, **attrs):
