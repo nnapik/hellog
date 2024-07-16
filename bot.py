@@ -23,6 +23,7 @@ class MyBot(commands.Bot):
         self.logSpamChannels = {}
         self.deleteChannels = {}
         self.role_cache = {}
+        self.role_channels = {}
 
     async def on_ready(self):
         cogs = Cogs(self)
@@ -38,6 +39,8 @@ class MyBot(commands.Bot):
                 self.logSpamChannels[c.guild.id] = c
             if (c.name == 'deleted'):
                 self.deleteChannels[c.guild.id] = c
+            if (c.name == 'dej-mi-roli'):
+                self.role_channels[c.guild.id] = c
 
         self.logger.info('Found log channels on:')
         for l in self.logChannels:
@@ -50,6 +53,10 @@ class MyBot(commands.Bot):
         self.logger.info('Found delete channels on:')
         for d in self.deleteChannels:
             self.logger.info(self.deleteChannels[d].guild.name)
+
+        self.logger.info('Found role channels on:')
+        for d in self.role_channels:
+            self.logger.info(self.role_channels[d].guild.name)
 
         if (admin_id != ''):
             self.admin = self.get_user(int(admin_id))

@@ -12,6 +12,28 @@ class Auto(commands.Cog):
         bot.logger.info("Auto cog initilized")
 
     @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        # add Raider role when someone gets X or E group role
+        raider = self.bot.get_role(before.guild, 'Raider')
+        if raider is None:
+            return
+
+        x_group = self.bot.get_role(before.guild, 'X group')
+        if x_group is None:
+            return
+
+        e_group = self.bot.get_role(before.guild, 'Early group')
+        if e_group is None:
+            return
+
+        if x_group not in before.roles and x_group in after.roles:
+            await after.add_roles(raider)
+
+        if e_group not in before.roles and e_group in after.roles:
+            await after.add_roles(raider)
+
+
+    @commands.Cog.listener()
     async def on_message_delete(self, message):
         self.bot.logger.info(f'deleting #{str(message)}')
         channel = self.bot.deleteChannels[message.guild.id]
@@ -63,8 +85,7 @@ class Auto(commands.Cog):
     async def purge(self, ctx):
         await ctx.message.delete()
         channel = ctx.channel
-        messages = await channel.history(limit=123).flatten()
-        for m in messages[::-1]:
+        async for m in channel.history():
             if (m.pinned):
                 continue
             await m.delete()
