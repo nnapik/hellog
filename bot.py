@@ -40,6 +40,18 @@ class MyBot(commands.Bot):
         if self.admin:
             await self.admin.send(error_message)
 
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, commands.CommandNotFound):
+            await ctx.send("This command does not exist.")
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("A required argument is missing.")
+        elif isinstance(error, commands.CommandOnCooldown):
+            await ctx.send(f"Command is on cooldown. Try again in {round(error.retry_after, 2)} seconds.")
+        else:
+            await ctx.send(f"An unexpected error occurred: {error}")
+            # Optionally, notify the bot owner
+            await self.admin.send(ctx, error)
+
     async def on_ready(self):
         cogs = Cogs(self)
         await client.add_cog(cogs)
