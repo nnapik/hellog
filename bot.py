@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import traceback
 
 import discord
 
@@ -12,6 +13,8 @@ from cogs.cogs import Cogs
 # from cogs.voice import Voice
 
 secret = os.environ['BOT_SECRET']
+prihlasky_secret = os.environ['PRIHLASKY_ADMIN_TOKEN']
+prihlasky_url = os.environ['PRIHLASKY_URL']
 admin_id = os.environ['ADMIN_ID']
 
 
@@ -24,6 +27,18 @@ class MyBot(commands.Bot):
         self.deleteChannels = {}
         self.role_cache = {}
         self.role_channels = {}
+        self.prihlasky_secret = prihlasky_secret
+        self.prihlasky_url = prihlasky_url
+
+    # Global error handler for all events
+    async def on_error(self, event_method, *args, **kwargs):
+        error_message = f"An error occurred in the event: {event_method}"
+        error_message += "```" + traceback.format_exc() + "```"  # Stack trace
+
+        print(error_message)
+
+        if self.admin:
+            await self.admin.send(error_message)
 
     async def on_ready(self):
         cogs = Cogs(self)
