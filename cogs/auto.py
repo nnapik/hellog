@@ -22,14 +22,21 @@ class Auto(commands.Cog):
         if x_group is None:
             return
 
-        e_group = self.bot.get_role(before.guild, 'Early group')
-        if e_group is None:
+        e_mythic = self.bot.get_role(before.guild, 'Early Mythic')
+        if e_mythic is None:
+            return
+
+        e_hc = self.bot.get_role(before.guild, 'Early HC')
+        if e_hc is None:
             return
 
         if x_group not in before.roles and x_group in after.roles:
             await after.add_roles(raider)
 
-        if e_group not in before.roles and e_group in after.roles:
+        if e_mythic not in before.roles and e_mythic in after.roles:
+            await after.add_roles(raider)
+
+        if e_hc not in before.roles and e_hc in after.roles:
             await after.add_roles(raider)
 
 
