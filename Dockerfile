@@ -1,4 +1,4 @@
-FROM python:buster
+FROM python:bookworm
 
 RUN echo "Acquire::http::No-Cache true;" > /etc/apt/apt.conf \
     && echo "Acquire::http::Pipeline-Depth 0;" >> /etc/apt/apt.conf \

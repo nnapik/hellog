@@ -20,3 +20,18 @@ class Dadgar(commands.Cog):
     async def khadgar(self, ctx, **attrs):
         await ctx.send(ctx.author.mention + ': ' + random.choice(self.lines))
 
+    @commands.command(name='roll')
+    async def roll(self, ctx, *attrs):
+        if len(attrs) != 1:
+            ctx.send('invalid parameters, expecting 1 positive integer')
+            return
+        try:
+            num = int(attrs[0], 10)
+            if num < 0:
+                await ctx.send('invalid parameters, expecting 1 positive integer')
+                return
+            rnum = random.randint(1, num)
+            await ctx.send(f'{ctx.author.mention} rolls {rnum} (1-{num})')
+        except ValueError:
+            await ctx.send('invalid parameters, expecting 1 positive integer')
+            return
