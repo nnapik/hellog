@@ -6,7 +6,9 @@ RUN echo "Acquire::http::No-Cache true;" > /etc/apt/apt.conf \
     && apt-get upgrade -y \
     && apt-get install -y libffi-dev python3-dev ffmpeg
 
-RUN python3 -m pip install --upgrade pip && python3 -m pip install -U discord.py PyNaCl youtube_dl boto3
+RUN python3 -m pip install --upgrade pip
+COPY requirements.txt ./
+RUN python3 -m pip install -r requirements.txt
 #RUN apk del .build-deps gcc musl-dev make
 ENV BOT_SECRET=changeme
 
