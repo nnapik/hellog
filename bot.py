@@ -11,11 +11,13 @@ from discord.ext.commands import when_mentioned_or
 from logger import Logger
 from cogs.cogs import Cogs
 # from cogs.voice import Voice
+from dotenv import load_dotenv
+
+load_dotenv()
 
 secret = os.environ['BOT_SECRET']
 prihlasky_secret = os.environ['PRIHLASKY_ADMIN_TOKEN']
 prihlasky_url = os.environ['PRIHLASKY_URL']
-admin_id = os.environ['ADMIN_ID']
 
 
 class MyBot(commands.Bot):
@@ -32,13 +34,11 @@ class MyBot(commands.Bot):
 
     # Global error handler for all events
     async def on_error(self, event_method, *args, **kwargs):
-        error_message = f"An error occurred in the event: {event_method}"
-        error_message += "```" + traceback.format_exc() + "```"  # Stack trace
-
-        print(error_message)
-
-        if self.admin:
-            await self.admin.send(error_message)
+        tb = traceback.format_exc()
+        print(tb)
+        embed = discord.Embed(title=f"Error in event: {event_method}", color=discord.Color.red())
+        embed.add_field(name="Stacktrace", value=f"```{tb[:1000]}```", inline=False)
+        await self.send_to_admin(embed=embed)
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
@@ -48,9 +48,7 @@ class MyBot(commands.Bot):
         elif isinstance(error, commands.CommandOnCooldown):
             await ctx.send(f"Command is on cooldown. Try again in {round(error.retry_after, 2)} seconds.")
         else:
-            await ctx.send(f"An unexpected error occurred: {error}")
-            # Optionally, notify the bot owner
-            await self.admin.send(ctx, error)
+            await self.send_error_to_admin(ctx.message.content, error)
 
     async def on_ready(self):
         cogs = Cogs(self)
@@ -85,12 +83,7 @@ class MyBot(commands.Bot):
         for d in self.role_channels:
             self.logger.info(self.role_channels[d].guild.name)
 
-        if (admin_id != ''):
-            self.admin = self.get_user(int(admin_id))
-            if (self.admin == None):
-                self.logger.info("Found no admins, beware")
-            else:
-                self.logger.info(f"{self.admin.display_name} is the boss here!")
+        self.admin = self.application.owner
 
     def get_role(self, guild, role_name):
         if guild.id not in self.role_cache:
@@ -105,16 +98,27 @@ class MyBot(commands.Bot):
 
         return guild.get_role(role_id)
 
+    async def send_to_admin(self, message=None, embed=None):
+        if not hasattr(self, 'admin') or self.admin is None:
+            return
+        await self.admin.send(message, embed=embed)
+
+    async def send_error_to_admin(self, title, error):
+        tb = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
+        embed = discord.Embed(title=title, color=discord.Color.red())
+        embed.add_field(name="Error", value=str(error), inline=False)
+        # Discord field value limit is 1024 chars
+        embed.add_field(name="Stacktrace", value=f"```{tb[:1000]}```", inline=False)
+        await self.send_to_admin(embed=embed)
+
     async def log_error(self, ctx, embed, error):
-        if (self.admin == None):
-            pass
         if (embed != None):
             embed.add_field(name="server:", value=ctx.guild)
             embed.add_field(name="channel:", value=ctx.channel)
             embed.add_field(name="command:", value=ctx.command)
             embed.add_field(name="message:", value=ctx.message)
             embed.add_field(name="stacktrace:", value=error.original)
-        await self.admin.send(content=None, embed=embed)
+            await self.send_to_admin(content=None, embed=embed)
 
     async def log(self, message, guild):
         await self.logChannels[guild.id].send(message)

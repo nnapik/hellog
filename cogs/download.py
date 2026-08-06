@@ -57,6 +57,10 @@ class Download(commands.Cog):
         with open(fname, 'w') as f:
             json.dump(sorted(content), f, default=obj_dict, indent=4)
 
+    async def dw_channel_bytes(self, channel) -> bytes:
+        content = await self.dw_channel(channel)
+        return json.dumps(sorted(content), default=obj_dict).encode('utf-8')
+
     async def backup_channel(self, channel):
         content = await self.dw_channel(channel)
         fname = self.get_fname(channel)

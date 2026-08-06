@@ -1,5 +1,6 @@
 import re
 import importlib
+import aiohttp
 from discord.ext import commands
 from discord import TextChannel
 
@@ -62,6 +63,30 @@ class Prihlasky(commands.Cog):
             dw = self.bot.get_cog('Download')
             await dw.backup_category(category)
 
+    async def backup_channel(self, channel):
+        #TODO add check for S3 connection
+        dw = self.bot.get_cog('Download')
+        await dw.backup_channel(channel)
+
+    async def upload_to_prihlasky(self, channel):
+        if not self.bot.prihlasky_secret:
+            raise GuildApplicationException("no bot.prihlasky_secret defined, unable to upload")
+        if not self.bot.prihlasky_url:
+            raise GuildApplicationException("no bot.prihlasky_url defined, unable to upload")
+        dw = self.bot.get_cog('Download')
+        content = await dw.dw_channel_bytes(channel)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                url=self.bot.prihlasky_url + '/upload',
+                data=content,
+                headers={
+                    'Content-Type': 'application/octet-stream',
+                    'token': self.bot.prihlasky_secret
+                }
+            ) as response:
+                if response.status != 204:
+                    await self.bot.send_to_admin(str(response.status))
+
     @commands.command()
     async def archiv(self, ctx):
         channel = ctx.channel
@@ -70,6 +95,14 @@ class Prihlasky(commands.Cog):
                 if (category.name == 'archiv-prihlasek'):
                     await channel.move(beginning=True, category=category, sync_permissions=True)
                     await self.fix_full_archiv(category)
+                    try:
+                        await self.backup_channel(channel)
+                    except Exception as e:
+                        await self.bot.send_error_to_admin(f"backup failed for {channel.name}", e)
+                    try:
+                        await self.upload_to_prihlasky(channel)
+                    except Exception as e:
+                        await self.bot.send_error_to_admin(f"upload failed for {channel.name}", e)
                     break
 
     @commands.has_any_role('Personalni oddeleni (HR)', 'Guild Officir', 'Admin')
@@ -92,5 +125,5 @@ class Prihlasky(commands.Cog):
             await author.edit(nick=nick)
 
 class GuildApplicationException(Exception):
-    def __init__(message):
-        super(message)
+    def __init__(self,message):
+        super().__init__(message)
