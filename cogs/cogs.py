@@ -10,7 +10,7 @@ class Cogs(commands.Cog):
     async def reload(self, ctx=None):
         if ctx is not None:
             await ctx.send("Reloading plugins")
-        self.reload_cogs()
+        await self.reload_cogs()
 
     async def reload_cogs(self):
         await self.unload('Ping')
