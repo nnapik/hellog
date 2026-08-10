@@ -51,9 +51,10 @@ class MyBot(commands.Bot):
             await self.send_error_to_admin(ctx.message.content, error)
 
     async def on_ready(self):
-        cogs = Cogs(self)
-        await client.add_cog(cogs)
-        await cogs.reload_cogs()
+        if 'Cogs' not in self.cogs:
+            cogs = Cogs(self)
+            await client.add_cog(cogs)
+            await cogs.reload_cogs()
 
         self.logger.info('logged on as ' + str(self.user))
 
