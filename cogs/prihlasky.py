@@ -9,6 +9,8 @@ class Prihlasky(commands.Cog):
         self.bot = bot
         self.init_role_name = 'Navsteva'
         self.member_role_name = 'Member'
+        self.forever_role_name = 'Forever'
+        self.retail_role_name = 'Retail'
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -104,6 +106,38 @@ class Prihlasky(commands.Cog):
                     except Exception as e:
                         await self.bot.send_error_to_admin(f"upload failed for {channel.name}", e)
                     break
+
+    @commands.has_any_role('Personalni oddeleni (HR)', 'Guild Officir', 'Admin')
+    @commands.command()
+    async def inv_r(self, ctx):
+        await self.inv(ctx)
+        channel = ctx.channel
+        if channel.name.startswith('prihlaska-'):
+            nick = re.match(r'prihlaska-(.*)', channel.name)[1].title()
+            messages = [h async for h in channel.history(limit=123)]
+            first = messages[-1]
+            author = first.author
+            ratail_role = self.bot.get_role(ctx.guild, self.retail_role_name)
+            if ratail_role is None:
+                raise GuildApplicationException("Couldn't identify roles")
+            await author.add_role(ratail_role)
+
+
+    @commands.has_any_role('Personalni oddeleni (HR)', 'Guild Officir', 'Admin')
+    @commands.command()
+    async def inv_f(self, ctx):
+        await self.inv(ctx)
+        channel = ctx.channel
+        if channel.name.startswith('prihlaska-'):
+            nick = re.match(r'prihlaska-(.*)', channel.name)[1].title()
+            messages = [h async for h in channel.history(limit=123)]
+            first = messages[-1]
+            author = first.author
+            forever_role = self.bot.get_role(ctx.guild, self.forever_role_name)
+            if forever_role is None:
+                raise GuildApplicationException("Couldn't identify roles")
+            await author.add_role(forever_role)
+
 
     @commands.has_any_role('Personalni oddeleni (HR)', 'Guild Officir', 'Admin')
     @commands.command()
